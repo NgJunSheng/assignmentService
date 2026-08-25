@@ -1,0 +1,10 @@
+﻿  MainPage,Staff,Customer,Member.cpp
+C:\Users\User\Desktop\assignment\assignment\MainPage,Staff,Customer,Member.cpp(1515,14): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\assignment\assignment\MainPage,Staff,Customer,Member.cpp(1516,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\assignment\assignment\MainPage,Staff,Customer,Member.cpp(1517,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\assignment\assignment\MainPage,Staff,Customer,Member.cpp(1518,19): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\assignment\assignment\MainPage,Staff,Customer,Member.cpp(1519,21): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\assignment\assignment\MainPage,Staff,Customer,Member.cpp(1520,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\assignment\assignment\MainPage,Staff,Customer,Member.cpp(1521,20): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\assignment\assignment\MainPage,Staff,Customer,Member.cpp(1522,19): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  assignment.vcxproj -> C:\Users\User\Desktop\assignment\x64\Debug\assignment.exe
