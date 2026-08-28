@@ -105,6 +105,83 @@
 //    }
 //    return -1;
 //}
+// DATE VALIDATION
+//bool ValidDate(const string& date) {
+//
+//    // DD/MM/YYYY
+//    if (date.length() != 10) {
+//        return false;
+//    }
+//
+//    if (date[2] != '/' || date[5] != '/') {
+//        return false;
+//    }
+//
+//    for (int i = 0; i < date.length(); i++) {
+//
+//        if (i == 2 || i == 5) {
+//            continue;
+//        }
+//
+//        if (!isdigit(date[i])) {
+//            return false;
+//        }
+//    }
+//    return true;
+//}
+//
+//// TIME VALIDATION
+//bool ValidTime(const string& time) {
+//
+//    // Hour:Min
+//    if (time.length() != 5) {
+//        return false;
+//    }
+//
+//    if (time[2] != ':') {
+//        return false;
+//    }
+//
+//    for (int i = 0; i < time.length(); i++) {
+//
+//        if (i == 2) {
+//            continue;
+//        }
+//
+//        if (!isdigit(time[i])) {
+//            return false;
+//        }
+//    }
+//
+//    int hour = stoi(time.substr(0, 2));
+//    int minute = stoi(time.substr(3, 2));
+//
+//    if (hour < 0 || hour > 23) {
+//        return false;
+//    }
+//
+//    if (minute < 0 || minute > 59) {
+//        return false;
+//    }
+//
+//    return true;
+//}
+//
+//bool isDuplicateBooking(const Bookings& newBooking) {
+//    for (int i = 0; i < bookingCount; i++) {
+//        // Ignore cancelled bookings
+//        if (bookingDB[i].status == "Cancelled") {
+//            continue;
+//        }
+//
+//        // Same customer + same date + same time
+//        if (bookingDB[i].customerID == newBooking.customerID && bookingDB[i].date == newBooking.date && bookingDB[i].time == newBooking.time) {
+//            cout << "cannot have same booking time, same date and same time\n";
+//            return true;
+//        }
+//    }
+//    return false;
+//}
 //// --- Member booking ---
 //void memberBookingMenu(const string& customerID) {
 //    int choice = 0;
