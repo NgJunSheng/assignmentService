@@ -71,7 +71,40 @@
 //
 //int serviceCounter = 1006;
 //int bookingCounter = 1001;
+//// FIND SERVICE
+//// FIND SERVICE
+//int findServiceID(const string& serviceID) {
 //
+//    for (int i = 0; i < servicecount; i++) {
+//        if (servicesDB[i].serviceID == serviceID) {
+//            return i;
+//        }
+//    }
+//    return -1;
+//}
+//
+//// FIND STAFF
+//int findStaffID(const string& staffID) {
+//
+//    for (int i = 0; i < staffCount; i++) {
+//        if (staffDB[i].idStaff == staffID) {
+//            return i;
+//        }
+//    }
+//    return -1;
+//}
+//
+//
+//// FIND BOOKING
+//int findBookingID(const string& bookingID) {
+//
+//    for (int i = 0; i < bookingCount; i++) {
+//        if (bookingDB[i].bookingID == bookingID) {
+//            return i;
+//        }
+//    }
+//    return -1;
+//}
 //// --- Member booking ---
 //void memberBookingMenu(const string& customerID) {
 //    int choice = 0;
