@@ -46,7 +46,6 @@ struct Timeslot {
     int id;
     string time;
     bool isBooked;
-    string bookingID;
     string staffID;
     string staffName;
     string customerID;
@@ -76,6 +75,7 @@ struct Bookings {
 
 void clearInput();
 //Member booking
+//Ng Jun Sheng Part
 void memberBookingMenu(const string& customerID);//main page for customer
 void viewServices();
 void searchBooking(const string& customerID);
@@ -85,6 +85,8 @@ void editBooking(const string& customerID);
 void cancelBooking(const string& customerID);
 void viewBooking(const string& customerID);
 void generateBookingSlip(const string& customerID);
+bool isDuplicateBooking(const Bookings& newBooking);
+bool validateBooking(const Bookings& booking);
 
 //Staff Booking
 void staffBookingMenu();//main page for staff
@@ -136,14 +138,12 @@ void clearInput() {
 int customerCounter = 1005;
 int memberCounter = 1005;
 int staffCounter = 1011;
-int servicecount = 5;
-int serviceCounter = 1006;
-int bookingCounter = 1001;
 
 const int MAX_CUSTOMERS = 100;
 const int MAX_MEMBERS = 100;
 const int MAX_STAFF = 100;
 const int MAX_SERVICES = 100;
+const int MAX_BOOKINGS = 100;
 
 int customerCount = 4;
 int memberCount = 4;
@@ -162,14 +162,22 @@ Services servicesDB[MAX_SERVICES] = {
     {"SI1005", "Skin Care Threatment ", 110.00, 90},
 };
 
+Bookings bookingDB[MAX_BOOKINGS];
+
+int servicecount = 5;
+int bookingCount = 0;
+
+int serviceCounter = 1006;
+int bookingCounter = 1001;
+
 Timeslot defaultDaySlots[TOTAL_SLOTS] = {
-    {1, "09:00 AM - 11:00 AM", false, "", "", "", "", "", "", ""},
-    {2, "11:00 AM - 01:00 PM", false, "", "", "", "", "", "", ""},
-    {3, "01:00 PM - 03:00 PM", false, "", "", "", "", "", "", ""},
-    {4, "03:00 PM - 05:00 PM", false, "", "", "", "", "", "", ""},
-    {5, "05:00 PM - 07:00 PM", false, "", "", "", "", "", "", ""},
-    {6, "07:00 PM - 09:00 PM", false, "", "", "", "", "", "", ""},
-    {7, "09:00 PM - 11:00 PM", false, "", "", "", "", "", "", ""}
+    {1, "09:00 AM - 11:00 AM", false, "", "", "", "", "", ""},
+    {2, "11:00 AM - 01:00 PM", false, "", "", "", "", "", ""},
+    {3, "01:00 PM - 03:00 PM", false, "", "", "", "", "", ""},
+    {4, "03:00 PM - 05:00 PM", false, "", "", "", "", "", ""},
+    {5, "05:00 PM - 07:00 PM", false, "", "", "", "", "", ""},
+    {6, "07:00 PM - 09:00 PM", false, "", "", "", "", "", ""},
+    {7, "09:00 PM - 11:00 PM", false, "", "", "", "", "", ""}
 };
 
 Timeslot schedule[DAYS_IN_MONTH][TOTAL_SLOTS];
@@ -231,17 +239,14 @@ int findStaffID(const string& staffID) {
 
 
 // FIND BOOKING
-bool findBookingID(const string& bookingID, int& dayIndex, int& slotIndex) {
-    for (int day = 0; day < DAYS_IN_MONTH; day++) {
-        for (int slot = 0; slot < TOTAL_SLOTS; slot++) {
-            if (schedule[day][slot].bookingID == bookingID) {
-                dayIndex = day;
-                slotIndex = slot;
-                return true;
-            }
+int findBookingID(const string& bookingID) {
+
+    for (int i = 0; i < bookingCount; i++) {
+        if (bookingDB[i].bookingID == bookingID) {
+            return i;
         }
     }
-    return false;
+    return -1;
 }
 
 // DATE VALIDATION
@@ -306,14 +311,17 @@ bool ValidTime(const string& time) {
     return true;
 }
 
-//BOOKING DUPLICATE
-bool isDuplicateBooking(const string& customerID, int dayIndex, int slotIndex) {
-    for (int slot = 0; slot < TOTAL_SLOTS; slot++) {
-        if (schedule[dayIndex][slot].isBooked &&
-            schedule[dayIndex][slot].customerID == customerID) {
-            if (slot == slotIndex) {
-                return true;
-            }
+bool isDuplicateBooking(const Bookings& newBooking) {
+    for (int i = 0; i < bookingCount; i++) {
+        // Ignore cancelled bookings
+        if (bookingDB[i].status == "Cancelled") {
+            continue;
+        }
+
+        // Same customer + same date + same time
+        if (bookingDB[i].customerID == newBooking.customerID && bookingDB[i].date == newBooking.date && bookingDB[i].time == newBooking.time) {
+            cout << "cannot have same booking time, same date and same time\n";
+            return true;
         }
     }
     return false;
@@ -1828,143 +1836,92 @@ void viewServices() {
 }
 
 //SEARCH BOOKING
-void searchBooking(const string& customerID)
-{
-    string bookingID;
+void searchBooking(const string& customerID) {
+    string bookid;
+    cout << "\nEnter Booking ID to search: ";
+    cin >> bookid;
 
-    cout << "\nEnter Booking ID: ";
-    cin >> bookingID;
-
-    int dayIndex;
-    int slotIndex;
-
-    if (!findBookingID(bookingID, dayIndex, slotIndex))
-    {
+    int index = findBookingID(bookid);
+    if (index == -1) {
         cout << "[Error] Booking not found.\n";
         return;
     }
 
-    Timeslot& booking = schedule[dayIndex][slotIndex];
-
-    if (booking.customerID != customerID)
-    {
-        cout << "[Error] Booking does not belong to this customer.\n";
+    if (bookingDB[index].customerID != customerID) {
+        cout << "[Error] You do not have permission to view this booking.\n";
         return;
     }
 
     cout << "\n========== BOOKING FOUND ==========\n";
-    cout << "Booking ID : " << booking.bookingID << "\n";
-    cout << "Customer ID: " << booking.customerID << "\n";
-    cout << "Service    : " << booking.service << "\n";
-    cout << "Staff ID   : " << booking.staffID << "\n";
-    cout << "Date       : Day " << dayIndex + 1 << "\n";
-    cout << "Time       : " << booking.time << "\n";
-    cout << "Status     : " << booking.status << "\n";
+    cout << "Booking ID : " << bookingDB[index].bookingID << "\n";
+    cout << "Customer ID: " << bookingDB[index].customerID << "\n";
+    cout << "Service ID : " << bookingDB[index].serviceID << "\n";
+    cout << "Staff ID   : " << bookingDB[index].staffID << "\n";
+    cout << "Date       : " << bookingDB[index].date << "\n";
+    cout << "Time       : " << bookingDB[index].time << "\n";
+    cout << "Status     : " << bookingDB[index].status << "\n";
 }
+
 // MEMBER - ADD SINGLE BOOKING
 void addSingleBooking(const string& customerID) {
 
-    int dayOption;
-    int slotOption;
-
-    cout << "\n========== ADD BOOKING ==========\n";
-    cout << "Enter Day of Month (1-31): ";
-    cin >> dayOption;
-
-    if (cin.fail() || dayOption < 1 || dayOption > 31) {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cout << "[Error] Invalid day.\n";
+    if (bookingCount >= MAX_BOOKINGS) {
+        cout << "[Error] Booking database is full.\n";
         return;
     }
 
-    int dayIndex = dayOption - 1;
-    ViewAllAppointment(schedule[dayIndex], TOTAL_SLOTS);
-    cout << "\nSelect Timeslot (1-7): ";
-    cin >> slotOption;
-
-    if (cin.fail() || slotOption < 1 || slotOption > TOTAL_SLOTS) {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cout << "[Error] Invalid timeslot.\n";
-        return;
+    Bookings newBooking;
+    newBooking.customerID = customerID;
+    newBooking.status = "Confirmed";
+    cout << "\n========== AVAILABLE STAFF ==========\n";
+    for (int i = 0; i < staffCount; i++) {
+        cout << "[" << i + 1 << "] "
+            << staffDB[i].nameStaff
+            << " (" << staffDB[i].idStaff << ")"
+            << " - " << staffDB[i].positionStaff
+            << "\n";
     }
-
-    int slotIndex = slotOption - 1;
-
-    // CHECK IF SLOT IS ALREADY BOOKED
-    if (schedule[dayIndex][slotIndex].isBooked) {
-        cout << "\n[Error] This timeslot is already booked.\n";
-        return;
-    }
-
-    // CHECK CUSTOMER DUPLICATE
-    if (isDuplicateBooking(customerID, dayIndex, slotIndex)) {
-        cout << "\n[Error] You already have a booking at this date and time.\n";
-        return;
-    }
-
-    // SELECT SERVICE
+    cout << "\n========== ADD SINGLE BOOKING ==========\n";
     viewServices();
-
-    string serviceID;
-
     cout << "Enter Service ID: ";
-    cin >> serviceID;
-
-    int serviceIndex = findServiceID(serviceID);
-    if (serviceIndex == -1) {
+    cin >> newBooking.serviceID;
+    if (findServiceID(newBooking.serviceID) == -1) {
         cout << "[Error] Service ID not found.\n";
         return;
     }
 
-    // SELECT STAFF
-    string staffID;
-
-    cout << "\nAvailable Staff:\n";
-
-    for (int i = 0; i < staffCount; i++) {
-        cout << staffDB[i].idStaff
-            << " - "
-            << staffDB[i].nameStaff
-            << endl;
-    }
-
     cout << "Enter Staff ID: ";
-    cin >> staffID;
-
-    int staffIndex = findStaffID(staffID);
-
-    if (staffIndex == -1) {
+    cin >> newBooking.staffID;
+    if (findStaffID(newBooking.staffID) == -1) {
         cout << "[Error] Staff ID not found.\n";
         return;
     }
 
-    // STORE BOOKING DIRECTLY INTO TIMESLOT
-    schedule[dayIndex][slotIndex].bookingID =
-        "B" + to_string(bookingCounter++);
+    cout << "Enter Date (DD/MM/YYYY): ";
+    cin >> newBooking.date;
 
-    schedule[dayIndex][slotIndex].customerID = customerID;
+    cout << "Enter Time (HH:MM): ";
+    cin >> newBooking.time;
 
-    schedule[dayIndex][slotIndex].staffID =
-        staffDB[staffIndex].idStaff;
+    // Check normal validation first
+    if (!validateBooking(newBooking)) {
+        cout << "[Error] Wrong Input.\n";
+        return;
+    }
 
-    schedule[dayIndex][slotIndex].staffName =
-        staffDB[staffIndex].nameStaff;
+    // Check duplicate booking
+    if (isDuplicateBooking(newBooking)) {
+        cout << "[Error] You already have a booking on " << newBooking.date << " at " << newBooking.time << ".\n";
+        cout << "You cannot make another booking at the same time.\n";
+        return;
+    }
 
-    schedule[dayIndex][slotIndex].service =
-        servicesDB[serviceIndex].servicename;
-
-    schedule[dayIndex][slotIndex].status =
-        "Confirmed";
-
-    schedule[dayIndex][slotIndex].isBooked = true;
+    newBooking.bookingID = "B" + to_string(bookingCounter++);
+    bookingDB[bookingCount] = newBooking;
+    bookingCount++;
 
     cout << "\n[Success] Booking added successfully!\n";
-
-    cout << "Booking ID: "
-        << schedule[dayIndex][slotIndex].bookingID
-        << endl;
+    cout << "Booking ID: " << newBooking.bookingID << "\n";
 }
 
 // MEMBER - ADD MULTIPLE BOOKINGS
@@ -1987,98 +1944,89 @@ void editBooking(const string& customerID) {
     cout << "\nEnter Booking ID to edit: ";
     cin >> editid;
 
-    int dayIndex;
-    int slotIndex;
-
-    if (!findBookingID(editid, dayIndex, slotIndex)) {
+    int index = findBookingID(editid);
+    if (index == -1) {
         cout << "[Error] Booking not found.\n";
         return;
     }
-    Timeslot& booking = schedule[dayIndex][slotIndex];
 
-    if (booking.customerID != customerID) {
+    if (bookingDB[index].customerID != customerID) {
         cout << "[Error] You cannot edit this booking.\n";
         return;
     }
 
-    if (booking.status == "Cancelled") {
+    if (bookingDB[index].status == "Cancelled") {
         cout << "[Error] Cancelled booking cannot be edited.\n";
         return;
     }
 
-    viewServices();
+    string newDate;
+    string newTime;
+    cout << "\nEnter new date (DD/MM/YYYY): ";
+    cin >> newDate;
 
-    string serviceID;
-    cout << "Enter new Service ID: ";
-    cin >> serviceID;
-
-    int serviceIndex = findServiceID(serviceID);
-
-    if (serviceIndex == -1)
-    {
-        cout << "[Error] Service not found.\n";
+    if (!ValidDate(newDate)) {
+        cout << "[Error] Invalid date format.\n";
         return;
     }
 
-    booking.service = servicesDB[serviceIndex].servicename;
+    cout << "Enter new time (HH:MM): ";
+    cin >> newTime;
+    if (!ValidTime(newTime)) {
+        cout << "[Error] Invalid time format.\n";
+        return;
+    }
 
-    cout << "\n[Success] Booking edited successfully.\n";
+    bookingDB[index].date = newDate;
+    bookingDB[index].time = newTime;
+    cout << "\n[Success] Booking updated successfully.\n";
 }
-    
+
 // MEMBER - CANCEL BOOKING
 void cancelBooking(const string& customerID) {
-
-    string bookingID;
-
+    string cancelid;
     cout << "\nEnter Booking ID to cancel: ";
-    cin >> bookingID;
+    cin >> cancelid;
 
-    int dayIndex;
-    int slotIndex;
-
-    if (!findBookingID(bookingID, dayIndex, slotIndex)) {
+    int index = findBookingID(cancelid);
+    if (index == -1) {
         cout << "[Error] Booking not found.\n";
         return;
     }
 
-    if (schedule[dayIndex][slotIndex].customerID != customerID) {
+    if (bookingDB[index].customerID != customerID) {
         cout << "[Error] You cannot cancel this booking.\n";
         return;
     }
 
-    if (schedule[dayIndex][slotIndex].status == "Cancelled") {
-        cout << "[Error] Booking already cancelled.\n";
+    if (bookingDB[index].status == "Cancelled") {
+        cout << "[Error] Booking is already cancelled.\n";
         return;
     }
 
-    schedule[dayIndex][slotIndex].status = "Cancelled";
-    schedule[dayIndex][slotIndex].isBooked = false;
+    bookingDB[index].status = "Cancelled";
     cout << "\n[Success] Booking "
-        << bookingID
-        << " cancelled successfully.\n";
+        << cancelid
+        << " has been cancelled.\n";
 }
 
 // MEMBER - VIEW MY BOOKINGS
 void viewBooking(const string& customerID) {
-
     bool found = false;
     cout << "\n========== MY BOOKINGS ==========\n";
-
-    for (int day = 0; day < DAYS_IN_MONTH; day++) {
-        for (int slot = 0; slot < TOTAL_SLOTS; slot++) {
-            if (schedule[day][slot].isBooked && schedule[day][slot].customerID == customerID) {
-                found = true;
-                cout << "\nBooking ID : " << schedule[day][slot].bookingID << "\n";
-                cout << "Customer ID: " << schedule[day][slot].customerID << "\n";
-                cout << "Service    : " << schedule[day][slot].service << "\n";
-                cout << "Staff ID   : " << schedule[day][slot].staffID << "\n";
-                cout << "Date       : Day " << day + 1 << "\n";
-                cout << "Time       : " << schedule[day][slot].time << "\n"; 
-                cout << "Status     : " << schedule[day][slot].status << "\n";
-                cout << "--------------------------------\n";
-            }
+    for (int i = 0; i < bookingCount; i++) {
+        if (bookingDB[i].customerID == customerID) {
+            found = true;
+            cout << "\nBooking ID : " << bookingDB[i].bookingID << "\n";
+            cout << "Service ID : " << bookingDB[i].serviceID << "\n";
+            cout << "Staff ID   : " << bookingDB[i].staffID << "\n";
+            cout << "Date       : " << bookingDB[i].date << "\n";
+            cout << "Time       : " << bookingDB[i].time << "\n";
+            cout << "Status     : " << bookingDB[i].status << "\n";
+            cout << "--------------------------------\n";
         }
     }
+
     if (!found) {
         cout << "No bookings found.\n";
     }
@@ -2086,38 +2034,34 @@ void viewBooking(const string& customerID) {
 
 // MEMBER - GENERATE BOOKING SLIP
 void generateBookingSlip(const string& customerID) {
-
-    string bookingID;
-
+    string id;
     cout << "\nEnter Booking ID: ";
-    cin >> bookingID;
+    cin >> id;
 
-    int dayIndex;
-    int slotIndex;
-
-    if (!findBookingID(bookingID, dayIndex, slotIndex)) {
+    int index = findBookingID(id);
+    if (index == -1) {
         cout << "[Error] Booking not found.\n";
         return;
     }
 
-    if (schedule[dayIndex][slotIndex].customerID != customerID) {
+    if (bookingDB[index].customerID != customerID) {
         cout << "[Error] You cannot access this booking.\n";
         return;
     }
 
     cout << "\n";
     cout << "========================================\n";
-    cout << "       BOOKING CONFIRMATION SLIP\n";
+    cout << "       BOOKING CONFIRMATION SLIP        \n";
     cout << "========================================\n";
-    cout << "Booking ID : " << schedule[dayIndex][slotIndex].bookingID << "\n";
-    cout << "Customer ID: " << schedule[dayIndex][slotIndex].customerID << "\n";
-    cout << "Service    : " << schedule[dayIndex][slotIndex].service << "\n";
-    cout << "Staff ID   : " << schedule[dayIndex][slotIndex].staffID << "\n";
-    cout << "Date       : Day " << dayIndex + 1 << "\n";
-    cout << "Time       : " << schedule[dayIndex][slotIndex].time << "\n";
-    cout << "Status     : " << schedule[dayIndex][slotIndex].status << "\n";
+    cout << "Booking ID : " << bookingDB[index].bookingID << "\n";
+    cout << "Customer ID: " << bookingDB[index].customerID << "\n";
+    cout << "Service ID : " << bookingDB[index].serviceID << "\n";
+    cout << "Staff ID   : " << bookingDB[index].staffID << "\n";
+    cout << "Date       : " << bookingDB[index].date << "\n";
+    cout << "Time       : " << bookingDB[index].time << "\n";
+    cout << "Status     : " << bookingDB[index].status << "\n";
     cout << "========================================\n";
-    cout << "       Thank you for your booking!\n";
+    cout << "       Thank you for your booking!      \n";
     cout << "========================================\n";
 }
 
@@ -2143,8 +2087,6 @@ void staffBookingMenu() {
 
         if (!(cin >> choice)) {
             cout << "[Error] Invalid input.\n";
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             continue;
         }
 
@@ -2287,9 +2229,6 @@ void editService() {
         return;
     }
 
-    // Remove leftover '\n' from cin >> id
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
     cout << "\nEnter new service name: ";
     getline(cin, servicesDB[index].servicename);
 
@@ -2299,10 +2238,7 @@ void editService() {
     cout << "Enter new duration: ";
     cin >> servicesDB[index].duration;
 
-    if (servicesDB[index].servicename.empty() ||
-        servicesDB[index].price <= 0 ||
-        servicesDB[index].duration <= 0) {
-
+    if (servicesDB[index].price <= 0 || servicesDB[index].duration <= 0 || servicesDB[index].servicename.empty()) {
         cout << "[Error] Invalid service information.\n";
         return;
     }
@@ -2331,316 +2267,232 @@ void searchService() {
 
 // STAFF - ADD BOOKING
 void staffAddBooking() {
-    string customerID;
-  
+
+    if (bookingCount >= MAX_BOOKINGS) {
+        cout << "[Error] Booking database is full.\n";
+        return;
+    }
+
+    Bookings newBooking;
+    newBooking.bookingID = "B" + to_string(bookingCounter++);
+
     cout << "\n========== STAFF ADD BOOKING ==========\n";
+
+    cout << "Generated Booking ID: "
+        << newBooking.bookingID << "\n";
+
     cout << "Enter Customer ID: ";
-    cin >> customerID;
-    int customerIndex = findCustomerIndex(customerID);
-    int memberIndex = findMemberIndex(customerID);
+    cin >> newBooking.customerID;
 
-    string customerName;
-
-    if (customerIndex != -1)
-    {
-        customerName = customerDB[customerIndex].nameCustomer;
-    }
-    else if (memberIndex != -1)
-    {
-        customerName = memberDB[memberIndex].nameMember;
-    }
-    else
-    {
-        cout << "[Error] Customer not found.\n";
-        return;
-    }
-    int dayOption;
-
-    cout << "Enter Day of Month (1-31): ";
-    cin >> dayOption;
-
-    if (dayOption < 1 || dayOption > 31)
-    {
-        cout << "[Error] Invalid day.\n";
-        return;
-    }
-
-    int dayIndex = dayOption - 1;
-
-    ViewAllAppointment(schedule[dayIndex], TOTAL_SLOTS);
-
-    int slotOption;
-
-    cout << "Select Timeslot (1-7): ";
-    cin >> slotOption;
-
-    if (slotOption < 1 || slotOption > TOTAL_SLOTS)
-    {
-        cout << "[Error] Invalid timeslot.\n";
-        return;
-    }
-
-    int slotIndex = slotOption - 1;
-
-    if (schedule[dayIndex][slotIndex].isBooked)
-    {
-        cout << "[Error] This timeslot is already booked.\n";
-        return;
-    }
-
-    viewServices();
-
-    string serviceID;
+    viewAllServices();
 
     cout << "Enter Service ID: ";
-    cin >> serviceID;
-
-    int serviceIndex = findServiceID(serviceID);
-
-    if (serviceIndex == -1)
-    {
+    cin >> newBooking.serviceID;
+    if (findServiceID(newBooking.serviceID) == -1) {
         cout << "[Error] Service not found.\n";
         return;
     }
 
-    string staffID;
-
     cout << "\nAvailable Staff:\n";
-
-    for (int i = 0; i < staffCount; i++)
-    {
-        cout << staffDB[i].idStaff
-            << " - "
-            << staffDB[i].nameStaff << "\n";
+    for (int i = 0; i < staffCount; i++) {
+        cout << staffDB[i].idStaff << " - " << staffDB[i].nameStaff << "\n";
     }
 
     cout << "Enter Staff ID: ";
-    cin >> staffID;
-
-    int staffIndex = findStaffID(staffID);
-
-    if (staffIndex == -1)
-    {
+    cin >> newBooking.staffID;
+    if (findStaffID(newBooking.staffID) == -1) {
         cout << "[Error] Staff not found.\n";
         return;
     }
 
-    // STORE DIRECTLY IN SCHEDULE
-    schedule[dayIndex][slotIndex].bookingID =
-        "B" + to_string(bookingCounter++);
+    cout << "Enter Date (DD/MM/YYYY): ";
+    cin >> newBooking.date;
 
-    schedule[dayIndex][slotIndex].customerID =
-        customerID;
+    cout << "Enter Time (HH:MM): ";
+    cin >> newBooking.time;
 
-    schedule[dayIndex][slotIndex].customerName =
-        customerName;
+    newBooking.status = "Confirmed";
 
-    schedule[dayIndex][slotIndex].service =
-        servicesDB[serviceIndex].servicename;
+    if (!validateBooking(newBooking)) {
+        cout << "[Error] Booking validation failed.\n";
+        return;
+    }
 
-    schedule[dayIndex][slotIndex].staffID =
-        staffDB[staffIndex].idStaff;
-
-    schedule[dayIndex][slotIndex].staffName =
-        staffDB[staffIndex].nameStaff;
-
-    schedule[dayIndex][slotIndex].status =
-        "Confirmed";
-
-    schedule[dayIndex][slotIndex].isBooked =
-        true;
-
+    bookingDB[bookingCount] = newBooking;
+    bookingCount++;
     cout << "\n[Success] Booking added successfully.\n";
-
     cout << "Booking ID: "
-        << schedule[dayIndex][slotIndex].bookingID << "\n";
+        << newBooking.bookingID << "\n";
 }
 
 // STAFF - VIEW BOOKING
+
 void staffViewBooking() {
 
-    bool found = false;
+    if (bookingCount == 0) {
+        cout << "\nNo bookings available.\n";
+        return;
+    }
 
     cout << "\n========== ALL BOOKINGS ==========\n";
-    for (int day = 0; day < DAYS_IN_MONTH; day++) {
-        for (int slot = 0; slot < TOTAL_SLOTS; slot++) {
-            if (schedule[day][slot].isBooked) {
-                found = true;
-                cout << "\nBooking ID : " << schedule[day][slot].bookingID << "\n";
-                cout << "Customer ID: " << schedule[day][slot].customerID << "\n";
-                cout << "Service    : " << schedule[day][slot].service << "\n";
-                cout << "Staff ID   : " << schedule[day][slot].staffID << "\n";
-                cout << "Date       : Day " << day + 1 << "\n";
-                cout << "Time       : " << schedule[day][slot].time << "\n";
-                cout << "Status     : " << schedule[day][slot].status << "\n";
-                cout << "----------------------------------\n";
-            }
-        }
-    }
-    if (!found) {
-        cout << "No bookings available.\n";
+
+    for (int i = 0; i < bookingCount; i++) {
+        cout << "\nBooking ID : " << bookingDB[i].bookingID << "\n";
+        cout << "Customer ID: " << bookingDB[i].customerID << "\n";
+        cout << "Service ID : " << bookingDB[i].serviceID << "\n";
+        cout << "Staff ID   : " << bookingDB[i].staffID << "\n";
+        cout << "Date       : " << bookingDB[i].date << "\n";
+        cout << "Time       : " << bookingDB[i].time << "\n";
+        cout << "Status     : " << bookingDB[i].status << "\n";
+        cout << "----------------------------------\n";
     }
 }
 
 // STAFF - RESCHEDULE / CANCEL BOOKING
 void rescheduleCancelBooking() {
-    string bookingID;
+    string id;
     int choice;
     cout << "\nEnter Booking ID: ";
-    cin >> bookingID;
+    cin >> id;
 
-    int dayIndex;
-    int slotIndex;
-
-    if (!findBookingID(bookingID, dayIndex, slotIndex)){
+    int index = findBookingID(id);
+    if (index == -1) {
         cout << "[Error] Booking not found.\n";
         return;
     }
 
-    Timeslot& booking = schedule[dayIndex][slotIndex];
     cout << "\n1. Reschedule Booking\n";
     cout << "2. Cancel Booking\n";
     cout << "Select option: ";
     cin >> choice;
 
     if (choice == 1) {
-        int newDay;
-        int newSlot;
+        string newDate;
+        string newTime;
+        cout << "Enter new date (DD/MM/YYYY): ";
+        cin >> newDate;
 
-        cout << "Enter new day (1-31): ";
-        cin >> newDay;
-
-        cout << "Enter new timeslot (1-7): ";
-        cin >> newSlot;
-
-        if (newDay < 1 || newDay > 31 ||
-            newSlot < 1 || newSlot > TOTAL_SLOTS)
-        {
-            cout << "[Error] Invalid date or timeslot.\n";
+        if (!ValidDate(newDate)) {
+            cout << "[Error] Invalid date format.\n";
             return;
         }
 
-        int newDayIndex = newDay - 1;
-        int newSlotIndex = newSlot - 1;
+        cout << "Enter new time (HH:MM): ";
+        cin >> newTime;
 
-        if (schedule[newDayIndex][newSlotIndex].isBooked)
-        {
-            cout << "[Error] New timeslot is already booked.\n";
+        if (!ValidTime(newTime)) {
+            cout << "[Error] Invalid time format.\n";
             return;
         }
-        // Move booking
-        schedule[newDayIndex][newSlotIndex] = booking;
 
-        schedule[newDayIndex][newSlotIndex].time =
-            defaultDaySlots[newSlotIndex].time;
-
-        schedule[dayIndex][slotIndex] = defaultDaySlots[slotIndex];
-
+        bookingDB[index].date = newDate;
+        bookingDB[index].time = newTime;
+        bookingDB[index].status = "Confirmed";
         cout << "\n[Success] Booking rescheduled successfully.\n";
     }
 
-    else if (choice == 2)
-    {
-        if (booking.status == "Cancelled")
-        {
+    else if (choice == 2) {
+
+        if (bookingDB[index].status == "Cancelled") {
             cout << "[Error] Booking already cancelled.\n";
             return;
         }
 
-        booking.status = "Cancelled";
-        booking.isBooked = false;
-
+        bookingDB[index].status = "Cancelled";
         cout << "\n[Success] Booking cancelled successfully.\n";
     }
-    else
-    {
+
+    else {
         cout << "[Error] Invalid selection.\n";
     }
 }
 
 // STAFF - EDIT BOOKING
 void staffEditBooking() {
-    string bookingID;
+    string id;
     cout << "\nEnter Booking ID to edit: ";
-    cin >> bookingID;
+    cin >> id;
 
-    int dayIndex;
-    int slotIndex;
-    if (!findBookingID(bookingID, dayIndex, slotIndex))
-    {
+    int index = findBookingID(id);
+    if (index == -1) {
         cout << "[Error] Booking not found.\n";
         return;
     }
 
-    Timeslot& booking = schedule[dayIndex][slotIndex];
-
-    if (booking.status == "Cancelled")
-    {
+    if (bookingDB[index].status == "Cancelled") {
         cout << "[Error] Cancelled booking cannot be edited.\n";
         return;
     }
 
+    cout << "\nCurrent Service ID: " << bookingDB[index].serviceID << "\n";
+
     viewAllServices();
-    string serviceID;
     cout << "Enter new Service ID: ";
-    cin >> serviceID;
+    cin >> bookingDB[index].serviceID;
 
-    int serviceIndex = findServiceID(serviceID);
-
-    if (serviceIndex == -1)
-    {
+    if (findServiceID(bookingDB[index].serviceID) == -1) {
         cout << "[Error] Service not found.\n";
         return;
     }
 
-    booking.service = servicesDB[serviceIndex].servicename;
     cout << "\nAvailable Staff:\n";
-
-    for (int i = 0; i < staffCount; i++)
-    {
-        cout << staffDB[i].idStaff << " - " << staffDB[i].nameStaff << "\n";
+    for (int i = 0; i < staffCount; i++) {
+        cout << staffDB[i].idStaff
+            << " - "
+            << staffDB[i].nameStaff
+            << "\n";
     }
 
     cout << "Enter new Staff ID: ";
+    cin >> bookingDB[index].staffID;
 
-    string staffID;
-    cin >> staffID;
-
-    int staffIndex = findStaffID(staffID);
-
-    if (staffIndex == -1)
-    {
+    if (findStaffID(bookingDB[index].staffID) == -1) {
         cout << "[Error] Staff not found.\n";
         return;
     }
-    booking.staffID = staffDB[staffIndex].idStaff;
-    booking.staffName = staffDB[staffIndex].nameStaff;
     cout << "\n[Success] Booking edited successfully.\n";
 }
 
 // STAFF - SEARCH BOOKING
 void staffSearchBooking() {
 
-    string bookingID;
+    string id;
 
     cout << "\nEnter Booking ID to search: ";
-    cin >> bookingID;
+    cin >> id;
 
-    int dayIndex;
-    int slotIndex;
-    if (!findBookingID(bookingID, dayIndex, slotIndex))
-    {
+    int index = findBookingID(id);
+    if (index == -1) {
         cout << "[Error] Booking not found.\n";
         return;
     }
-    Timeslot& booking = schedule[dayIndex][slotIndex];
 
     cout << "\n========== BOOKING FOUND ==========\n";
-    cout << "Booking ID : " << booking.bookingID << "\n";
-    cout << "Customer ID: " << booking.customerID << "\n";
-    cout << "Customer   : " << booking.customerName << "\n";
-    cout << "Staff ID   : " << booking.staffID << "\n";
-    cout << "Date       : Day " << dayIndex + 1 << "\n";
-    cout << "Time       : " << booking.time << "\n";
-    cout << "Status     : " << booking.status << "\n";
+    cout << "Booking ID : " << bookingDB[index].bookingID << "\n";
+    cout << "Customer ID: " << bookingDB[index].customerID << "\n";
+    cout << "Service ID : " << bookingDB[index].serviceID << "\n";
+    cout << "Staff ID   : " << bookingDB[index].staffID << "\n";
+    cout << "Date       : " << bookingDB[index].date << "\n";
+    cout << "Time       : " << bookingDB[index].time << "\n";
+    cout << "Status     : " << bookingDB[index].status << "\n";
+}
+
+// STAFF - VALIDATION
+void staffBookingValidation() {
+    cout << "\n========== BOOKING VALIDATION ==========\n";
+    if (bookingCount == 0) {
+        cout << "No bookings available for validation.\n";
+        return;
+    }
+
+    for (int i = 0; i < bookingCount; i++) {
+        cout << "\nBooking ID: "
+            << bookingDB[i].bookingID << "\n";
+        if (validateBooking(bookingDB[i])) {
+            cout << "Validation: VALID\n";
+        }
+        else {
+            cout << "Validation: INVALID\n";
+        }
+    }
 }
