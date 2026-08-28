@@ -2005,9 +2005,7 @@ void cancelBooking(const string& customerID) {
     }
 
     bookingDB[index].status = "Cancelled";
-    cout << "\n[Success] Booking "
-        << cancelid
-        << " has been cancelled.\n";
+    cout << "\n[Success] Booking " << cancelid << " has been cancelled.\n";
 }
 
 // MEMBER - VIEW MY BOOKINGS
