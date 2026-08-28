@@ -1,0 +1,10 @@
+﻿  Service.cpp
+C:\Users\User\Desktop\ServiceAssignment\ServiceAssignment\Service.cpp(1532,14): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\ServiceAssignment\ServiceAssignment\Service.cpp(1533,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\ServiceAssignment\ServiceAssignment\Service.cpp(1534,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\ServiceAssignment\ServiceAssignment\Service.cpp(1535,19): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\ServiceAssignment\ServiceAssignment\Service.cpp(1536,21): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\ServiceAssignment\ServiceAssignment\Service.cpp(1537,18): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\ServiceAssignment\ServiceAssignment\Service.cpp(1538,20): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\User\Desktop\ServiceAssignment\ServiceAssignment\Service.cpp(1539,19): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  ServiceAssignment.vcxproj -> C:\Users\User\Desktop\ServiceAssignment\x64\Debug\ServiceAssignment.exe
