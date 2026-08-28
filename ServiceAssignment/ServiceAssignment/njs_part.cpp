@@ -28,6 +28,52 @@
 //int staffCount = 10;
 //void clearInput();
 //
+// BOOKING VALIDATION
+//bool validateBooking(const Bookings& booking) {
+//
+//    // Customer ID cannot be empty
+//    if (booking.customerID.empty()) {
+//        return false;
+//    }
+//
+//    // Service must exist
+//    if (findServiceID(booking.serviceID) == -1) {
+//        return false;
+//    }
+//
+//    // Staff must exist
+//    if (findStaffID(booking.staffID) == -1) {
+//        return false;
+//    }
+//
+//    // Date cannot be empty
+//    if (booking.date.empty()) {
+//        return false;
+//    }
+//
+//    // Date format
+//    if (!ValidDate(booking.date)) {
+//        return false;
+//    }
+//
+//    // Time cannot be empty
+//    if (booking.time.empty()) {
+//        return false;
+//    }
+//
+//    // Time format
+//    if (!ValidTime(booking.time)) {
+//        return false;
+//    }
+//
+//    // Status cannot be empty
+//    if (booking.status.empty()) {
+//        return false;
+//    }
+//
+//    return true;
+//}
+
 ////Member booking
 ////Ng Jun Sheng Part
 //void memberBookingMenu(const string& customerID);//main page for customer
